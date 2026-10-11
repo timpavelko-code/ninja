@@ -56,6 +56,8 @@ function buzz(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}}
 /* ---------- sound: everything is synthesized, no audio files ---------- */
 let AC=null,master=null,noiseBuf=null,nextNote=0,step=0;
 function audioInit(){
+  // iPhone: play sound even when the side switch is on silent (Safari 17+)
+  try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback';}catch(e){}
   if(AC){if(AC.state==='suspended')AC.resume();return;}
   try{
     AC=new(window.AudioContext||window.webkitAudioContext)();

@@ -22,32 +22,65 @@ const hash=n=>{const s=Math.sin(n*127.1+.3)*43758.5453;return s-Math.floor(s);};
 const hit=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
 
 const LEVELS=[
- {name:'Ночной город',sub:'Крыши спящей столицы',len:1400,speed:340,
+ {name:'Ночной город',sub:'Крыши спящей столицы',en:"Night City",enSub:'Rooftops of the sleeping capital',es:"Ciudad nocturna",esSub:'Tejados de la capital dormida',len:1400,speed:340,
   sky:['#070818','#1d1536','#46213d'],stars:true,moon:{x:760,y:115,r:54,c:'#f6ead2',glow:'255,230,200',craters:true},
   far:'#231a3c',farType:'hills',mid:'pagoda',midCol:'#160f29',fog:'70,33,61',roof:'tile',amb:'petal',flyer:'crow',
   sam:['#6e1d2a','#8a2635'],mix:{sam:.42,spike:.22,fly:.18,archer:0},boss:'shogun',accent:'#e0383f'},
- {name:'Бамбуковый лес',sub:'Мосты над туманом',len:1600,speed:385,
+ {name:'Бамбуковый лес',sub:'Мосты над туманом',en:"Bamboo Forest",enSub:'Bridges above the mist',es:"Bosque de bambú",esSub:'Puentes sobre la niebla',len:1600,speed:385,
   sky:['#0b1f1c','#244a38','#b9a86a'],stars:false,moon:{x:700,y:160,r:72,c:'#f3e6b8',glow:'250,230,170'},
   far:'#1d3a30',farType:'hills',mid:'bamboo',midCol:'#123024',fog:'70,100,70',roof:'bridge',amb:'leaf',flyer:'bat',
   sam:['#2f5a3a','#3d7048'],mix:{sam:.32,spike:.25,fly:.25,archer:.3},boss:'tengu',accent:'#6fae6a'},
- {name:'Снежные горы',sub:'Перевал над облаками',len:1800,speed:430,
+ {name:'Снежные горы',sub:'Перевал над облаками',en:"Snowy Mountains",enSub:'A pass above the clouds',es:"Montañas nevadas",esSub:'Un paso sobre las nubes',len:1800,speed:430,
   sky:['#0b1430','#33497e','#a9bce0'],stars:true,moon:{x:240,y:100,r:40,c:'#eef4ff',glow:'220,235,255',craters:true},
   far:'#2b3d6b',farType:'peaks',mid:'pines',midCol:'#18234a',fog:'190,205,235',roof:'ice',amb:'snow',flyer:'owl',
   sam:['#cfd6e6','#8fa2c4'],mix:{sam:.36,spike:.3,fly:.3,archer:.32},boss:'yuki',accent:'#9fc8ff'},
- {name:'Замок сёгуна',sub:'Последняя ночь',len:2000,speed:475,
+ {name:'Замок сёгуна',sub:'Последняя ночь',en:"Shogun's Castle",enSub:'The last night',es:"Castillo del shogun",esSub:'La última noche',len:2000,speed:475,
   sky:['#12040a','#3d0b12','#8a2a14'],stars:true,moon:{x:720,y:130,r:84,c:'#e8693a',glow:'255,110,60'},
   far:'#2a0a12',farType:'hills',mid:'castle',midCol:'#1a060c',fog:'120,30,20',roof:'stone',amb:'ember',flyer:'wisp',
   sam:['#26262e','#44444f'],mix:{sam:.45,spike:.3,fly:.3,archer:.36},boss:'oni',accent:'#ff7a3a'}
 ];
 const BOSSES={
- shogun:{name:'Красный Сёгун',hp:16,w:70,h:112,fly:false,attacks:['wave','slash','charge']},
- tengu:{name:'Тэнгу',hp:22,w:76,h:70,fly:true,attacks:['feathers','dive','feathers','gust']},
- yuki:{name:'Юки-онна',hp:26,w:60,h:100,fly:true,attacks:['shards','icicles','wave']},
- oni:{name:'Демон Они',hp:34,w:110,h:150,fly:false,attacks:['pound','fireballs','sweep','fireballs']}
+ shogun:{name:'Красный Сёгун',en:'Red Shogun',es:'Shogun Rojo',hp:16,w:70,h:112,fly:false,attacks:['wave','slash','charge']},
+ tengu:{name:'Тэнгу',en:'Tengu',es:'Tengu',hp:22,w:76,h:70,fly:true,attacks:['feathers','dive','feathers','gust']},
+ yuki:{name:'Юки-онна',en:'Yuki-onna',es:'Yuki-onna',hp:26,w:60,h:100,fly:true,attacks:['shards','icicles','wave']},
+ oni:{name:'Демон Они',en:'Oni Demon',es:'Demonio Oni',hp:34,w:110,h:150,fly:false,attacks:['pound','fireballs','sweep','fireballs']}
 };
 
 let best=0;try{best=+localStorage.getItem('ninja-best2')||0}catch(e){}
 let saved=0;try{saved=+localStorage.getItem('ninja-level')||0}catch(e){}
+let lang=null;try{const v=localStorage.getItem('ninja-lang');if(v==='ru'||v==='en'||v==='es')lang=v;}catch(e){}
+const LANGS=['ru','en','es'];
+let langSel=(()=>{const n=(navigator.language||'').toLowerCase();return n.startsWith('ru')?0:n.startsWith('es')?2:1;})();
+if(lang==='es'){} // keep stored choice
+const STR={
+ ru:{scrolls:'свитки',foes:'враги',best:'рекорд',loc:'ЛОКАЦИЯ',clear:'ЛОКАЦИЯ ПРОЙДЕНА',bonus:'бонус за жизни +',next:'Дальше: ',last:'Остался последний шаг…',
+  resume:'ПРОДОЛЖИТЬ',keyP:'клавиша P',restart:'ЗАНОВО',locN:'Локация ',toMenu:'В ГЛАВНОЕ МЕНЮ',saved:'прогресс сохранён',pause:'ПАУЗА',
+  fsT:'ВО ВЕСЬ ЭКРАН НА IPHONE',fs1:'Safari не даёт сайтам открываться на весь экран.',fs2:'Добавь игру на главный экран:',fs3:'1. Нажми «Поделиться» (квадрат со стрелкой вверх)',fs4:'2. Выбери «На экран Домой»',fs5:'3. Запускай игру с новой иконки',fs6:'коснись, чтобы закрыть',
+  t1:'НИНДЗЯ',t2:'КРАСНОЙ ЛУНЫ',tag:'RED MOON NINJA · 4 локации · 4 босса',newG:'НОВАЯ ИГРА',tapHere:'коснись здесь',keyN:'клавиша N',cont:'ПРОДОЛЖИТЬ',tap:'коснись',space:'ПРОБЕЛ',
+  tapStart:'Коснись экрана, чтобы начать',spaceStart:'ПРОБЕЛ — начать',fell:'ТЫ ПАЛ',points:'очки',fromStart:'С НАЧАЛА',firstLoc:'первая локация',again:'ЕЩЁ РАЗ',
+  spaceCont:'ПРОБЕЛ — продолжить с этой локации',rRestart:'R — начать заново с первой локации',win:'ПОБЕДА',winTxt:'Демон Они повержен. Замок сёгуна свободен.',
+  scrollsN:'свитков',foesN:'врагов',newBest:'Новый рекорд!',tapMenu:'Коснись экрана — в меню',spaceMenu:'ПРОБЕЛ — в меню',
+  hitBy:' задел тебя',beaten:' повержен!',moon:'Луна наливается кровью…',wall:'Врезался в стену',fall:'Сорвался вниз',spike:'Наступил на шипы',air:'Атака с воздуха',archer:'Лучник рядом',katana:'Удар катаной',shot:'Попадание'},
+ es:{scrolls:'pergaminos',foes:'enemigos',best:'récord',loc:'ZONA',clear:'¡ZONA SUPERADA!',bonus:'bonus de vidas +',next:'Siguiente: ',last:'Solo queda un paso…',
+  resume:'CONTINUAR',keyP:'tecla P',restart:'REINICIAR',locN:'Zona ',toMenu:'MENÚ PRINCIPAL',saved:'progreso guardado',pause:'PAUSA',
+  fsT:'PANTALLA COMPLETA EN IPHONE',fs1:'Safari no deja que las webs ocupen toda la pantalla.',fs2:'Añade el juego a tu pantalla de inicio:',fs3:'1. Toca Compartir (el cuadrado con una flecha)',fs4:'2. Elige «Añadir a pantalla de inicio»',fs5:'3. Abre el juego desde el nuevo icono',fs6:'toca para cerrar',
+  t1:'NINJA',t2:'DE LA LUNA ROJA',tag:'RED MOON NINJA · 4 zonas · 4 jefes',newG:'NUEVA PARTIDA',tapHere:'toca aquí',keyN:'tecla N',cont:'CONTINUAR',tap:'toca',space:'ESPACIO',
+  tapStart:'Toca la pantalla para empezar',spaceStart:'ESPACIO para empezar',fell:'HAS CAÍDO',points:'puntos',fromStart:'DESDE EL INICIO',firstLoc:'primera zona',again:'OTRA VEZ',
+  spaceCont:'ESPACIO para repetir esta zona',rRestart:'R para empezar desde la primera zona',win:'¡VICTORIA!',winTxt:'El Demonio Oni ha caído. El castillo del shogun es libre.',
+  scrollsN:'pergaminos',foesN:'enemigos',newBest:'¡Nuevo récord!',tapMenu:'Toca la pantalla para ir al menú',spaceMenu:'ESPACIO para ir al menú',
+  hitBy:' te ha golpeado',beaten:' ha caído!',moon:'La luna se tiñe de sangre…',wall:'Te chocaste con un muro',fall:'Te caíste',spike:'Pisaste unos pinchos',air:'Ataque desde el aire',archer:'Un arquero cerca',katana:'Golpe de katana',shot:'Te han dado'},
+ en:{scrolls:'scrolls',foes:'foes',best:'best',loc:'LOCATION',clear:'LOCATION CLEARED',bonus:'life bonus +',next:'Next: ',last:'One last step…',
+  resume:'RESUME',keyP:'key P',restart:'RESTART',locN:'Location ',toMenu:'MAIN MENU',saved:'progress saved',pause:'PAUSED',
+  fsT:'FULL SCREEN ON IPHONE',fs1:'Safari does not let websites go full screen.',fs2:'Add the game to your Home Screen:',fs3:'1. Tap Share (the square with an arrow)',fs4:'2. Choose “Add to Home Screen”',fs5:'3. Launch the game from the new icon',fs6:'tap to close',
+  t1:'RED MOON',t2:'NINJA',tag:'4 worlds · 4 bosses',newG:'NEW GAME',tapHere:'tap here',keyN:'key N',cont:'CONTINUE',tap:'tap',space:'SPACE',
+  tapStart:'Tap the screen to start',spaceStart:'SPACE to start',fell:'YOU FELL',points:'score',fromStart:'START OVER',firstLoc:'first location',again:'TRY AGAIN',
+  spaceCont:'SPACE to retry this location',rRestart:'R to start over from the first location',win:'VICTORY',winTxt:"The Oni Demon is defeated. The shogun's castle is free.",
+  scrollsN:'scrolls',foesN:'foes',newBest:'New best!',tapMenu:'Tap the screen for the menu',spaceMenu:'SPACE for the menu',
+  hitBy:' hit you',beaten:' is defeated!',moon:'The moon turns blood red…',wall:'Hit a wall',fall:'Fell down',spike:'Stepped on spikes',air:'Attack from above',archer:'Archer close by',katana:'Katana strike',shot:'You were hit'}
+};
+const T=k=>STR[lang||'ru'][k];
+const LN=l=>lang==='en'?l.en:lang==='es'?l.es:l.name, LS=l=>lang==='en'?l.enSub:lang==='es'?l.esSub:l.sub, BN=d=>lang==='en'?d.en:lang==='es'?d.es:d.name;
+function setLang(v){lang=v;try{localStorage.setItem('ninja-lang',v)}catch(e){}try{document.documentElement.lang=v}catch(e){}}
 let muted=false;try{muted=localStorage.getItem('ninja-muted')==='1'}catch(e){}
 const TOUCH=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
 function store(k,v){try{localStorage.setItem(k,v)}catch(e){}}
@@ -112,7 +145,7 @@ function music(){
 
 const G=2300,JUMP=-820,JUMP2=-700;
 const P={x:180,y:0,vy:0,w:30,h:52,onGround:true,jumps:0,coyote:0,inv:0,throwT:0,anim:0};
-let state='menu',paused=false,moonRed=1;
+let state=lang?'menu':'lang',paused=false,moonRed=1;
 let roofs=[],enemies=[],items=[],shots=[],parts=[],bullets=[],amb=[];
 let lvl=0,L=LEVELS[0],phase='run',levelDist=0,boss=null;
 let speed=340,dist=0,pts=0,levelStartPts=0,kills=0,scrollsN=0,lives=3;
@@ -250,12 +283,12 @@ function updBoss(dt){
   const box={x:P.x+4,y:P.y+4,w:P.w-8,h:P.h-6};
   if(hit(box,b)){
     if(P.vy>0&&P.y+P.h<b.y+26){damage(b,2);P.vy=-760;P.jumps=1;}
-    else hurt(b.d.name+' задел тебя');
+    else hurt(BN(b.d)+T('hitBy'));
   }
 }
 function damage(b,n){
   b.hp-=n;b.hurtT=.12;burst(b.x+b.w*.3,b.y+b.h*.4,C.gold,8,180);SFX.bossHit();buzz(25);
-  if(b.hp<=0){b.hp=0;b.mode='dead';b.t=0;bullets=[];pts+=500*(lvl+1);kills++;flash=.2;say(b.d.name+' повержен!');SFX.boom();buzz([80,40,160]);}
+  if(b.hp<=0){b.hp=0;b.mode='dead';b.t=0;bullets=[];pts+=500*(lvl+1);kills++;flash=.2;say((lang==='es'?'¡':'')+BN(b.d)+T('beaten'));SFX.boom();buzz([80,40,160]);}
 }
 
 /* ---------- update ---------- */
@@ -280,7 +313,7 @@ function update(dt){
   if(phase==='boss'||phase==='clear')speed+=(270-speed)*Math.min(1,dt*1.5);
   else speed=Math.min(L.speed+90,speed+4*dt);
   const dx=speed*dt;dist+=dx;pts+=dx/10;
-  if(phase==='run'){levelDist+=dx;if(levelDist>=L.len*10){phase='toBoss';say('Луна наливается кровью…');}}
+  if(phase==='run'){levelDist+=dx;if(levelDist>=L.len*10){phase='toBoss';say(T('moon'));}}
   for(const r of roofs)r.x-=dx;
   for(const e of enemies)e.x-=dx;
   for(const it of items)it.x-=dx;
@@ -302,11 +335,11 @@ function update(dt){
       if(prevBottom<=r.y+4&&P.y+P.h>=r.y&&P.vy>=0){
         P.y=r.y-P.h;P.vy=0;P.onGround=true;P.jumps=0;
         if(!wasGround)burst(P.x+15,r.y,'#6d6890',5,90);
-      }else if(P.y+P.h>r.y+12&&P.y<r.y+200){fallDeath('Врезался в стену');return;}
+      }else if(P.y+P.h>r.y+12&&P.y<r.y+200){fallDeath(T('wall'));return;}
     }
   }
   if(P.onGround)P.coyote=.09;else P.coyote-=dt;
-  if(P.y>H+80){fallDeath('Сорвался вниз');return;}
+  if(P.y>H+80){fallDeath(T('fall'));return;}
 
   for(const s of shots){s.x+=900*dt;s.r+=dt*22;}
 
@@ -320,7 +353,7 @@ function update(dt){
     if(e.dead)continue;
     if(hit(box,e)){
       if(e.type!=='spike'&&P.vy>0&&P.y+P.h<e.y+22){e.dead=true;kills++;pts+=25;SFX.kill();P.vy=-620;P.jumps=1;burst(e.x+e.w/2,e.y+10,C.gold,16);}
-      else hurt(e.type==='spike'?'Наступил на шипы':e.type==='fly'?'Атака с воздуха':e.type==='archer'?'Лучник рядом':'Удар катаной');
+      else hurt(T(e.type==='spike'?'spike':e.type==='fly'?'air':e.type==='archer'?'archer':'katana'));
       if(state!=='play')return;
     }
   }
@@ -333,7 +366,7 @@ function update(dt){
     if(b.kind==='icicle')b.vx=-speed;
     if(b.kind==='fire'&&b.y+b.h>=GY&&b.vy>0){if(b.bn<1){b.vy=-b.vy*.5;b.bn++;}else{b.vy=0;b.grav=0;b.y=GY-b.h;b.vx=-(speed+180);}}
     if(b.des)for(const s of shots)if(!s.dead&&hit(s,b)){s.dead=true;b.dead=true;burst(b.x,b.y,'#c9c4e0',6,120);}
-    if(!b.dead&&hit(box,b)){b.dead=true;hurt('Попадание');if(state!=='play')return;}
+    if(!b.dead&&hit(box,b)){b.dead=true;hurt(T('shot'));if(state!=='play')return;}
   }
   bullets=bullets.filter(b=>!b.dead&&b.x>-120&&b.x<W+200&&b.y<H+60);
 
@@ -354,7 +387,7 @@ const hexRGB=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
 const rgbOf=s=>s.split(',').map(Number);
 const mixRGB=(a,b,k)=>a.map((v,i)=>Math.round(v+(b[i]-v)*k)).join(',');
 function moonTarget(){
-  if(state==='menu'||state==='win')return 1;
+  if(state==='menu'||state==='win'||state==='lang')return 1;
   if(phase==='toBoss'||phase==='boss')return 1;
   if(phase==='clear')return 0;
   return clamp((levelDist/(L.len*10)-.5)/.5,0,1);
@@ -724,16 +757,16 @@ function band(y,h,a=.6){ctx.fillStyle=`rgba(5,4,12,${a})`;ctx.fillRect(0,y,W,h);
 
 function drawHUD(){
   text(String(Math.floor(pts)).padStart(5,'0'),24,44,30,C.paper);
-  text(`свитки ${scrollsN}   враги ${kills}`,24,70,14,'#cfcae6');
+  text(`${T('scrolls')} ${scrollsN}   ${T('foes')} ${kills}`,24,70,14,'#cfcae6');
   for(let i=0;i<3;i++)heart(W-34-i*28,22,i<lives);
-  text(`рекорд ${best}`,W-24,66,14,'#cfcae6','right');
+  text(`${T('best')} ${best}`,W-24,66,14,'#cfcae6','right');
   const bx=W/2-150,by=30,bw=300;
   if(boss){
-    text(boss.d.name.toUpperCase(),W/2,by-6,15,C.paper,'center');
+    text(BN(boss.d).toUpperCase(),W/2,by-6,15,C.paper,'center');
     ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(bx-2,by,bw+4,14);
     ctx.fillStyle=L.accent;ctx.fillRect(bx,by+2,bw*(boss.hp/boss.max),10);
   }else if(phase==='run'||phase==='toBoss'){
-    text(`${lvl+1}/4 · ${L.name}`,W/2,by-6,14,'#cfcae6','center');
+    text(`${lvl+1}/4 · ${LN(L)}`,W/2,by-6,14,'#cfcae6','center');
     const p=Math.min(1,levelDist/(L.len*10));
     ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(bx,by+3,bw,8);
     ctx.fillStyle=L.accent;ctx.fillRect(bx,by+3,bw*p,8);
@@ -743,28 +776,28 @@ function drawHUD(){
   if(cardT>0){
     ctx.globalAlpha=Math.min(1,cardT*2,(2.8-cardT)*4);
     band(170,140);
-    text(`ЛОКАЦИЯ ${lvl+1}`,W/2,210,16,L.accent,'center');
-    text(L.name.toUpperCase(),W/2,256,42,C.paper,'center');
-    text(L.sub,W/2,288,16,'#cfcae6','center');
+    text(`${T('loc')} ${lvl+1}`,W/2,210,16,L.accent,'center');
+    text(LN(L).toUpperCase(),W/2,256,42,C.paper,'center');
+    text(LS(L),W/2,288,16,'#cfcae6','center');
     ctx.globalAlpha=1;
-  }else if(msgT>0){ctx.globalAlpha=Math.min(1,msgT*2);text(msg,W/2,150,30,C.paper,'center');ctx.globalAlpha=1;}
+  }else if(msgT>0&&!paused){ctx.globalAlpha=Math.min(1,msgT*2);text(msg,W/2,150,30,C.paper,'center');ctx.globalAlpha=1;}
   if(phase==='clear'){
     band(160,170);
-    text('ЛОКАЦИЯ ПРОЙДЕНА',W/2,212,36,'#ffd23a','center');
-    text(`бонус за жизни +${clearBonus}`,W/2,250,18,C.paper,'center');
-    text(lvl<3?`Дальше: ${LEVELS[lvl+1].name}`:'Остался последний шаг…',W/2,290,18,'#cfcae6','center');
+    text(T('clear'),W/2,212,36,'#ffd23a','center');
+    text(`${T('bonus')}${clearBonus}`,W/2,250,18,C.paper,'center');
+    text(lvl<3?T('next')+LN(LEVELS[lvl+1]):T('last'),W/2,290,18,'#cfcae6','center');
   }
   if(paused)drawPauseMenu();
 }
 function pauseButtons(){
   const w=300,h=58,x=W/2-w/2;
-  return [{id:'resume',x,y:200,w,h,label:'ПРОДОЛЖИТЬ',sub:TOUCH?'':'клавиша P',main:true},
-          {id:'restart',x,y:270,w,h,label:'ЗАНОВО',sub:`Локация ${lvl+1}: ${L.name}`},
-          {id:'menu',x,y:340,w,h,label:'В ГЛАВНОЕ МЕНЮ',sub:'прогресс сохранён'}];
+  return [{id:'resume',x,y:200,w,h,label:T('resume'),sub:TOUCH?'':T('keyP'),main:true},
+          {id:'restart',x,y:270,w,h,label:T('restart'),sub:`${T('locN')}${lvl+1}: ${LN(L)}`},
+          {id:'menu',x,y:340,w,h,label:T('toMenu'),sub:T('saved')}];
 }
 function drawPauseMenu(){
   ctx.fillStyle='rgba(7,8,24,.75)';ctx.fillRect(0,0,W,H);
-  text('ПАУЗА',W/2,160,52,C.paper,'center');
+  text(T('pause'),W/2,160,52,C.paper,'center');
   for(const b of pauseButtons()){
     ctx.fillStyle=b.main?'rgba(224,56,63,.9)':'rgba(20,16,40,.92)';ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,b.h,9);ctx.fill();
     ctx.strokeStyle=b.main?'#ff8a8f':'#4b3f70';ctx.lineWidth=2;ctx.stroke();
@@ -773,6 +806,9 @@ function drawPauseMenu(){
   }
 }
 
+const LANGBTN={x:18,y:18,w:92,h:52};
+function langButtons(){const w=178,g=15,x0=W/2-(w*3+g*2)/2;return [{id:'ru',label:'РУССКИЙ',sub:'Russian'},{id:'en',label:'ENGLISH',sub:'Английский'},{id:'es',label:'ESPAÑOL',sub:'Spanish'}].map((b,i)=>({...b,x:x0+i*(w+g),y:306,w,h:68}));}
+function chooseLang(v){setLang(v);langSel=LANGS.indexOf(v);state='menu';}
 function menuBtn(x,y,w,h,label,sub,main){
   ctx.fillStyle=main?'rgba(224,56,63,.85)':'rgba(20,16,40,.85)';ctx.beginPath();ctx.roundRect(x,y,w,h,8);ctx.fill();
   ctx.strokeStyle=main?'#ff8a8f':'#4b3f70';ctx.lineWidth=2;ctx.stroke();
@@ -808,13 +844,13 @@ function drawFullHint(){
   ctx.fillStyle='rgba(7,8,24,.85)';ctx.fillRect(0,0,W,H);
   const w=Math.min(640,W-80),x=W/2-w/2;
   ctx.fillStyle='rgba(20,16,40,.95)';ctx.beginPath();ctx.roundRect(x,110,w,300,14);ctx.fill();ctx.strokeStyle='#4b3f70';ctx.lineWidth=2;ctx.stroke();
-  text('ВО ВЕСЬ ЭКРАН НА IPHONE',W/2,160,24,C.paper,'center');
-  text('Safari не даёт сайтам открываться на весь экран.',W/2,200,16,'#cfcae6','center');
-  text('Добавь игру на главный экран:',W/2,226,16,'#cfcae6','center');
-  text('1. Нажми «Поделиться» (квадрат со стрелкой вверх)',W/2,270,18,C.paper,'center');
-  text('2. Выбери «На экран Домой»',W/2,302,18,C.paper,'center');
-  text('3. Запускай игру с новой иконки',W/2,334,18,C.paper,'center');
-  text('коснись, чтобы закрыть',W/2,384,14,C.gold,'center');
+  text(T('fsT'),W/2,160,24,C.paper,'center');
+  text(T('fs1'),W/2,200,16,'#cfcae6','center');
+  text(T('fs2'),W/2,226,16,'#cfcae6','center');
+  text(T('fs3'),W/2,270,18,C.paper,'center');
+  text(T('fs4'),W/2,302,18,C.paper,'center');
+  text(T('fs5'),W/2,334,18,C.paper,'center');
+  text(T('fs6'),W/2,384,14,C.gold,'center');
 }
 function drawTouchPads(){
   ctx.globalAlpha=.22;ctx.fillStyle=C.paper;ctx.strokeStyle=C.paper;ctx.lineWidth=3;
@@ -856,38 +892,56 @@ function draw(){
   if(flash>0){ctx.fillStyle=`rgba(224,56,63,${flash})`;ctx.fillRect(0,0,W,H);}
 
   if(state==='play'){drawHUD();if(TOUCH&&!paused)drawTouchPads();}
+  if(state==='lang'){
+    ctx.fillStyle='rgba(7,8,24,.55)';ctx.fillRect(0,0,W,H);
+    text('RED MOON NINJA',W/2,150,64,C.paper,'center');
+    text('НИНДЗЯ КРАСНОЙ ЛУНЫ',W/2,192,24,'#ff4a52','center');
+    ctx.fillStyle=C.blood;ctx.fillRect(W/2-150,210,300,4);
+    text('Выбери язык  ·  Choose your language  ·  Elige tu idioma',W/2,262,18,'#e3def5','center');
+    for(const b of langButtons()){
+      const sel=LANGS.indexOf(b.id)===langSel;
+      ctx.fillStyle=sel?'rgba(224,56,63,.9)':'rgba(20,16,40,.9)';ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,b.h,10);ctx.fill();
+      ctx.strokeStyle=sel?'#ff8a8f':'#4b3f70';ctx.lineWidth=2;ctx.stroke();
+      text(b.label,b.x+b.w/2,b.y+34,22,C.paper,'center');text(b.sub,b.x+b.w/2,b.y+54,12,sel?'#ffe2e2':'#cfcae6','center');
+    }
+    if(!TOUCH)text('← →   ПРОБЕЛ / SPACE',W/2,420,14,'#cfcae6','center');
+  }
   if(state==='menu'){
     ctx.fillStyle='rgba(7,8,24,.45)';ctx.fillRect(0,0,W,H);
-    text('НИНДЗЯ',W/2,170,96,C.paper,'center');
-    text('КРАСНОЙ ЛУНЫ',W/2,214,30,'#ff4a52','center');
+    {const b=LANGBTN;ctx.fillStyle='rgba(10,8,22,.6)';ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,b.h,10);ctx.fill();
+     ctx.strokeStyle='rgba(236,228,212,.35)';ctx.lineWidth=1.5;ctx.stroke();
+     text((lang||'ru').toUpperCase(),b.x+b.w/2-8,b.y+34,20,C.paper,'center');
+     ctx.fillStyle=C.paper;ctx.beginPath();ctx.moveTo(b.x+b.w-24,b.y+23);ctx.lineTo(b.x+b.w-14,b.y+23);ctx.lineTo(b.x+b.w-19,b.y+30);ctx.closePath();ctx.fill();}
+    if(lang==='en'){text(T('t1'),W/2,150,40,'#ff4a52','center');text(T('t2'),W/2,226,96,C.paper,'center');}
+    else{text(T('t1'),W/2,170,96,C.paper,'center');text(T('t2'),W/2,214,30,'#ff4a52','center');}
     ctx.fillStyle=C.blood;ctx.fillRect(W/2-150,232,300,4);
-    text('RED MOON NINJA · 4 локации · 4 босса',W/2,268,17,'#e3def5','center');
+    text(T('tag'),W/2,268,17,'#e3def5','center');
     if(saved>0){
-      menuBtn(W/2-250,310,230,64,'НОВАЯ ИГРА',TOUCH?'коснись здесь':'клавиша N',false);
-      menuBtn(W/2+20,310,230,64,'ПРОДОЛЖИТЬ',`Локация ${saved+1} · `+(TOUCH?'коснись':'ПРОБЕЛ'),true);
-    }else if(Math.floor(t*2)%2===0)text(TOUCH?'Коснись экрана, чтобы начать':'ПРОБЕЛ — начать',W/2,345,20,C.gold,'center');
-    if(best)text(`рекорд ${best}`,W/2,420,16,'#cfcae6','center');
+      menuBtn(W/2-250,310,230,64,T('newG'),TOUCH?T('tapHere'):T('keyN'),false);
+      menuBtn(W/2+20,310,230,64,T('cont'),`${T('locN')}${saved+1} · `+(TOUCH?T('tap'):T('space')),true);
+    }else if(Math.floor(t*2)%2===0)text(TOUCH?T('tapStart'):T('spaceStart'),W/2,345,20,C.gold,'center');
+    if(best)text(`${T('best')} ${best}`,W/2,420,16,'#cfcae6','center');
   }
   if(state==='over'){
     ctx.fillStyle='rgba(7,8,24,.72)';ctx.fillRect(0,0,W,H);
-    text('ТЫ ПАЛ',W/2,180,72,C.blood,'center');
-    text(`Локация ${lvl+1}: ${L.name}`,W/2,225,20,'#e3def5','center');
-    text(`очки ${Math.floor(pts)}`,W/2,268,30,C.paper,'center');
-    text(`рекорд ${best}`,W/2,300,16,C.gold,'center');
+    text(T('fell'),W/2,180,72,C.blood,'center');
+    text(`${T('locN')}${lvl+1}: ${LN(L)}`,W/2,225,20,'#e3def5','center');
+    text(`${T('points')} ${Math.floor(pts)}`,W/2,268,30,C.paper,'center');
+    text(`${T('best')} ${best}`,W/2,300,16,C.gold,'center');
     if(overT>.7){
-      if(TOUCH){menuBtn(W/2-250,350,230,64,'С НАЧАЛА','первая локация',false);menuBtn(W/2+20,350,230,64,'ЕЩЁ РАЗ',`Локация ${lvl+1}`,true);}
-      else{if(Math.floor(t*2)%2===0)text('ПРОБЕЛ — продолжить с этой локации',W/2,370,18,C.paper,'center');
-        text('R — начать заново с первой локации',W/2,402,14,'#cfcae6','center');}
+      if(TOUCH){menuBtn(W/2-250,350,230,64,T('fromStart'),T('firstLoc'),false);menuBtn(W/2+20,350,230,64,T('again'),`${T('locN')}${lvl+1}`,true);}
+      else{if(Math.floor(t*2)%2===0)text(T('spaceCont'),W/2,370,18,C.paper,'center');
+        text(T('rRestart'),W/2,402,14,'#cfcae6','center');}
     }
   }
   if(state==='win'){
     ctx.fillStyle='rgba(7,4,8,.7)';ctx.fillRect(0,0,W,H);
-    text('ПОБЕДА',W/2,170,88,'#ffd23a','center');
-    text('Демон Они повержен. Замок сёгуна свободен.',W/2,218,20,C.paper,'center');
-    text(`очки ${Math.floor(pts)}`,W/2,270,32,C.paper,'center');
-    text(`свитков ${scrollsN} · врагов ${kills}`,W/2,302,18,'#e3def5','center');
-    text(Math.floor(pts)>=best?'Новый рекорд!':`рекорд ${best}`,W/2,334,18,C.gold,'center');
-    if(overT>1&&Math.floor(t*2)%2===0)text(TOUCH?'Коснись экрана — в меню':'ПРОБЕЛ — в меню',W/2,400,20,C.paper,'center');
+    text(T('win'),W/2,170,88,'#ffd23a','center');
+    text(T('winTxt'),W/2,218,20,C.paper,'center');
+    text(`${T('points')} ${Math.floor(pts)}`,W/2,270,32,C.paper,'center');
+    text(`${T('scrollsN')} ${scrollsN} · ${T('foesN')} ${kills}`,W/2,302,18,'#e3def5','center');
+    text(Math.floor(pts)>=best?T('newBest'):`${T('best')} ${best}`,W/2,334,18,C.gold,'center');
+    if(overT>1&&Math.floor(t*2)%2===0)text(TOUCH?T('tapMenu'):T('spaceMenu'),W/2,400,20,C.paper,'center');
   }
   drawIcons();
   if(fullHint)drawFullHint();
@@ -923,6 +977,13 @@ function pauseOn(){if(state==='play'&&!paused){paused=true;}}
 function toMenu(){state='menu';paused=false;boss=null;bullets=[];lvl=0;L=LEVELS[0];initAmb();phase='run';newWorld();}
 addEventListener('keydown',e=>{
   const k=e.code;audioInit();
+  if(state==='lang'){
+    if(k==='ArrowLeft'||k==='ArrowRight'||k==='KeyA'||k==='KeyD'){langSel=(langSel+(k==='ArrowLeft'||k==='KeyA'?2:1))%3;e.preventDefault();}
+    else if(k==='Space'||k==='Enter'){e.preventDefault();chooseLang(LANGS[langSel]);}
+    else if(k==='KeyM')setMuted(!muted);
+    return;
+  }
+  if(state==='menu'&&k==='KeyL'){state='lang';return;}
   if(['Space','ArrowUp','KeyW'].includes(k)){e.preventDefault();if(!primary('key')&&!paused&&!e.repeat)jumpQ=true;}
   else if(['KeyX','KeyJ','KeyF','Enter'].includes(k)){e.preventDefault();if(!primary('key')&&!paused)throwQ=true;}
   else if(k==='KeyP'||k==='Escape'){if(fullHint){fullHint=false;}else if(state==='play')paused=!paused;}
@@ -947,6 +1008,8 @@ cv.addEventListener('pointerdown',e=>{
     }
     return;
   }
+  if(state==='lang'){for(const b of langButtons())if(inR(gx,gy,b))chooseLang(b.id);return;}
+  if(state==='menu'&&inR(gx,gy,LANGBTN)){langSel=Math.max(0,LANGS.indexOf(lang));state='lang';return;}
   const side=gx<W/2?'left':'right';
   if(primary(side))return;
   if(side==='left')jumpQ=true;else throwQ=true;

@@ -112,7 +112,7 @@ function music(){
 
 const G=2300,JUMP=-820,JUMP2=-700;
 const P={x:180,y:0,vy:0,w:30,h:52,onGround:true,jumps:0,coyote:0,inv:0,throwT:0,anim:0};
-let state='menu',paused=false;
+let state='menu',paused=false,moonRed=1;
 let roofs=[],enemies=[],items=[],shots=[],parts=[],bullets=[],amb=[];
 let lvl=0,L=LEVELS[0],phase='run',levelDist=0,boss=null;
 let speed=340,dist=0,pts=0,levelStartPts=0,kills=0,scrollsN=0,lives=3;
@@ -131,6 +131,7 @@ function newWorld(){
   genRoofs();
 }
 function startLevel(i){
+  moonRed=0;
   lvl=i;L=LEVELS[i];speed=L.speed;levelDist=0;phase='run';boss=null;bullets=[];shots=[];
   lives=3;levelStartPts=pts;P.inv=0;initAmb();newWorld();cardT=2.8;msgT=0;step=0;
   if(i>saved){saved=i;store('ninja-level',i);}
@@ -272,13 +273,14 @@ function updAmb(dt){
 function update(dt){
   t+=dt;updAmb(dt);
   for(let i=parts.length-1;i>=0;i--){const q=parts[i];q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=900*dt;q.life-=dt;if(q.life<=0)parts.splice(i,1);}
+  moonRed+=(moonTarget()-moonRed)*Math.min(1,dt*(phase==='clear'?.9:1.6));
   shake=Math.max(0,shake-dt);flash=Math.max(0,flash-dt);msgT=Math.max(0,msgT-dt);cardT=Math.max(0,cardT-dt);
   if(state!=='play'){overT+=dt;jumpQ=throwQ=false;return;}
 
   if(phase==='boss'||phase==='clear')speed+=(270-speed)*Math.min(1,dt*1.5);
   else speed=Math.min(L.speed+90,speed+4*dt);
   const dx=speed*dt;dist+=dx;pts+=dx/10;
-  if(phase==='run'){levelDist+=dx;if(levelDist>=L.len*10){phase='toBoss';say('Впереди босс!');}}
+  if(phase==='run'){levelDist+=dx;if(levelDist>=L.len*10){phase='toBoss';say('Луна наливается кровью…');}}
   for(const r of roofs)r.x-=dx;
   for(const e of enemies)e.x-=dx;
   for(const it of items)it.x-=dx;
@@ -348,18 +350,35 @@ function update(dt){
 }
 
 /* ---------- background ---------- */
+const hexRGB=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const rgbOf=s=>s.split(',').map(Number);
+const mixRGB=(a,b,k)=>a.map((v,i)=>Math.round(v+(b[i]-v)*k)).join(',');
+function moonTarget(){
+  if(state==='menu'||state==='win')return 1;
+  if(phase==='toBoss'||phase==='boss')return 1;
+  if(phase==='clear')return 0;
+  return clamp((levelDist/(L.len*10)-.5)/.5,0,1);
+}
 function drawSky(){
   const g=ctx.createLinearGradient(0,0,0,H);
   g.addColorStop(0,L.sky[0]);g.addColorStop(.55,L.sky[1]);g.addColorStop(1,L.sky[2]);
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   if(L.stars)for(const s of stars){ctx.globalAlpha=.4+.6*Math.abs(Math.sin(t*.8+s.p));ctx.fillStyle='#e9e6ff';ctx.fillRect(s.x,s.y,s.r,s.r);}
   ctx.globalAlpha=1;
-  const m={...L.moon,x:L.moon.x*W/960};
-  const mg=ctx.createRadialGradient(m.x,m.y,m.r*.7,m.x,m.y,m.r*3.2);
-  mg.addColorStop(0,`rgba(${m.glow},.35)`);mg.addColorStop(1,`rgba(${m.glow},0)`);
-  ctx.fillStyle=mg;ctx.fillRect(m.x-m.r*3.2,m.y-m.r*3.2,m.r*6.4,m.r*6.4);
-  ctx.fillStyle=m.c;ctx.beginPath();ctx.arc(m.x,m.y,m.r,0,7);ctx.fill();
-  if(m.craters){ctx.fillStyle='rgba(120,120,150,.25)';[[-.3,-.28,.18],[.33,.27,.13],[.18,-.42,.09]].forEach(([a,b,c])=>{ctx.beginPath();ctx.arc(m.x+a*m.r,m.y+b*m.r,c*m.r,0,7);ctx.fill();});}
+  // Red moon: the closer the boss, the redder the moon and the sky
+  const rr=moonRed,ease=rr*rr*(3-2*rr);
+  if(ease>0){ctx.fillStyle=`rgba(150,8,24,${.32*ease})`;ctx.fillRect(0,0,W,H);}
+  const m={...L.moon,x:Math.min(L.moon.x*W/960,W-300),r:L.moon.r*(1+.22*ease)};
+  const glow=mixRGB(rgbOf(m.glow),[255,40,40],ease),core=mixRGB(hexRGB(m.c),[214,22,34],ease);
+  const gr=m.r*(3.2+1.4*ease);
+  const mg=ctx.createRadialGradient(m.x,m.y,m.r*.7,m.x,m.y,gr);
+  mg.addColorStop(0,`rgba(${glow},${.35+.25*ease})`);mg.addColorStop(1,`rgba(${glow},0)`);
+  ctx.fillStyle=mg;ctx.fillRect(m.x-gr,m.y-gr,gr*2,gr*2);
+  ctx.fillStyle=`rgb(${core})`;ctx.beginPath();ctx.arc(m.x,m.y,m.r,0,7);ctx.fill();
+  if(ease>.02){const sh=ctx.createRadialGradient(m.x-m.r*.3,m.y-m.r*.3,m.r*.1,m.x,m.y,m.r);
+    sh.addColorStop(0,`rgba(255,120,90,${.35*ease})`);sh.addColorStop(1,`rgba(90,0,10,${.45*ease})`);
+    ctx.fillStyle=sh;ctx.beginPath();ctx.arc(m.x,m.y,m.r,0,7);ctx.fill();}
+  if(m.craters){ctx.fillStyle=`rgba(${mixRGB([120,120,150],[110,0,10],ease)},.25)`;[[-.3,-.28,.18],[.33,.27,.13],[.18,-.42,.09]].forEach(([a,b,c])=>{ctx.beginPath();ctx.arc(m.x+a*m.r,m.y+b*m.r,c*m.r,0,7);ctx.fill();});}
 }
 function drawFar(){
   const off=dist*.05;ctx.fillStyle=L.far;
@@ -839,9 +858,10 @@ function draw(){
   if(state==='play'){drawHUD();if(TOUCH&&!paused)drawTouchPads();}
   if(state==='menu'){
     ctx.fillStyle='rgba(7,8,24,.45)';ctx.fillRect(0,0,W,H);
-    text('НИНДЗЯ',W/2,190,96,C.paper,'center');
-    ctx.fillStyle=C.blood;ctx.fillRect(W/2-150,212,300,5);
-    text('4 локации · 4 босса',W/2,256,22,'#e3def5','center');
+    text('НИНДЗЯ',W/2,170,96,C.paper,'center');
+    text('КРАСНОЙ ЛУНЫ',W/2,214,30,'#ff4a52','center');
+    ctx.fillStyle=C.blood;ctx.fillRect(W/2-150,232,300,4);
+    text('RED MOON NINJA · 4 локации · 4 босса',W/2,268,17,'#e3def5','center');
     if(saved>0){
       menuBtn(W/2-250,310,230,64,'НОВАЯ ИГРА',TOUCH?'коснись здесь':'клавиша N',false);
       menuBtn(W/2+20,310,230,64,'ПРОДОЛЖИТЬ',`Локация ${saved+1} · `+(TOUCH?'коснись':'ПРОБЕЛ'),true);

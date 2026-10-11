@@ -1,7 +1,7 @@
 {
-  "name": "Ниндзя",
-  "short_name": "Ниндзя",
-  "description": "Бег по крышам: 4 локации и 4 босса.",
+  "name": "Red Moon Ninja",
+  "short_name": "Red Moon",
+  "description": "Ниндзя Красной Луны: бег по крышам, 4 локации и 4 босса.",
   "lang": "ru",
   "start_url": "./",
   "scope": "./",

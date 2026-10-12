@@ -1,6 +1,6 @@
 // Saves the game on the phone so it works without internet.
 // Change VERSION each time you upload a new build, so players get the update.
-const VERSION = 'ninja-v9';
+const VERSION = 'ninja-v10';
 const FILES = [
   './', 'index.html', 'game.js', 'manifest.webmanifest',
   'fonts/RussoOne-Regular.ttf',

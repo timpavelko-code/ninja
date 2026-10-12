@@ -169,6 +169,8 @@ function startLevel(i){
   lives=3;levelStartPts=pts;P.inv=0;initAmb();newWorld();cardT=2.8;msgT=0;step=0;
   if(i>saved){saved=i;store('ninja-level',i);}
 }
+const inIntro=()=>state==='play'&&phase==='run'&&cardT>0&&levelDist<1;
+function skipIntro(){if(inIntro()&&cardT>.45){cardT=.45;return true;}return inIntro();}
 function newGame(){pts=0;kills=0;scrollsN=0;state='play';paused=false;startLevel(0);}
 function resumeSaved(){pts=0;kills=0;scrollsN=0;state='play';paused=false;startLevel(saved);}
 function continueGame(){pts=levelStartPts;state='play';paused=false;startLevel(lvl);}
@@ -309,6 +311,8 @@ function update(dt){
   moonRed+=(moonTarget()-moonRed)*Math.min(1,dt*(phase==='clear'?.9:1.6));
   shake=Math.max(0,shake-dt);flash=Math.max(0,flash-dt);msgT=Math.max(0,msgT-dt);cardT=Math.max(0,cardT-dt);
   if(state!=='play'){overT+=dt;jumpQ=throwQ=false;return;}
+  // Level intro: the world stands still until the location card is gone
+  if(inIntro()){jumpQ=throwQ=false;P.anim=0;return;}
 
   if(phase==='boss'||phase==='clear')speed+=(270-speed)*Math.min(1,dt*1.5);
   else speed=Math.min(L.speed+90,speed+4*dt);
@@ -984,8 +988,8 @@ addEventListener('keydown',e=>{
     return;
   }
   if(state==='menu'&&k==='KeyL'){state='lang';return;}
-  if(['Space','ArrowUp','KeyW'].includes(k)){e.preventDefault();if(!primary('key')&&!paused&&!e.repeat)jumpQ=true;}
-  else if(['KeyX','KeyJ','KeyF','Enter'].includes(k)){e.preventDefault();if(!primary('key')&&!paused)throwQ=true;}
+  if(['Space','ArrowUp','KeyW'].includes(k)){e.preventDefault();if(!primary('key')&&!paused&&!e.repeat&&!skipIntro())jumpQ=true;}
+  else if(['KeyX','KeyJ','KeyF','Enter'].includes(k)){e.preventDefault();if(!primary('key')&&!paused&&!skipIntro())throwQ=true;}
   else if(k==='KeyP'||k==='Escape'){if(fullHint){fullHint=false;}else if(state==='play')paused=!paused;}
   else if(k==='KeyM')setMuted(!muted);
   else if(k==='KeyN'&&state==='menu')newGame();
@@ -1012,6 +1016,7 @@ cv.addEventListener('pointerdown',e=>{
   if(state==='menu'&&inR(gx,gy,LANGBTN)){langSel=Math.max(0,LANGS.indexOf(lang));state='lang';return;}
   const side=gx<W/2?'left':'right';
   if(primary(side))return;
+  if(skipIntro())return;
   if(side==='left')jumpQ=true;else throwQ=true;
 });
 cv.addEventListener('contextmenu',e=>e.preventDefault());

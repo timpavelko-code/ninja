@@ -60,7 +60,7 @@ const STR={
   tapStart:'Коснись экрана, чтобы начать',spaceStart:'ПРОБЕЛ — начать',fell:'ТЫ ПАЛ',points:'очки',fromStart:'С НАЧАЛА',firstLoc:'первая локация',again:'ЕЩЁ РАЗ',
   spaceCont:'ПРОБЕЛ — продолжить с этой локации',rRestart:'R — начать заново с первой локации',win:'ПОБЕДА',winTxt:'Демон Они повержен. Замок сёгуна свободен.',
   scrollsN:'свитков',foesN:'врагов',newBest:'Новый рекорд!',tapMenu:'Коснись экрана — в меню',spaceMenu:'ПРОБЕЛ — в меню',
-  hitBy:' задел тебя',beaten:' повержен!',moon:'Луна наливается кровью…',wall:'Врезался в стену',fall:'Сорвался вниз',spike:'Наступил на шипы',air:'Атака с воздуха',archer:'Лучник рядом',katana:'Удар катаной',shot:'Попадание'},
+  life:'+1 жизнь!',hitBy:' задел тебя',beaten:' повержен!',moon:'Луна наливается кровью…',wall:'Врезался в стену',fall:'Сорвался вниз',spike:'Наступил на шипы',air:'Атака с воздуха',archer:'Лучник рядом',katana:'Удар катаной',shot:'Попадание'},
  es:{scrolls:'pergaminos',foes:'enemigos',best:'récord',loc:'ZONA',clear:'¡ZONA SUPERADA!',bonus:'bonus de vidas +',next:'Siguiente: ',last:'Solo queda un paso…',
   resume:'CONTINUAR',keyP:'tecla P',restart:'REINICIAR',locN:'Zona ',toMenu:'MENÚ PRINCIPAL',saved:'progreso guardado',pause:'PAUSA',
   fsT:'PANTALLA COMPLETA EN IPHONE',fs1:'Safari no deja que las webs ocupen toda la pantalla.',fs2:'Añade el juego a tu pantalla de inicio:',fs3:'1. Toca Compartir (el cuadrado con una flecha)',fs4:'2. Elige «Añadir a pantalla de inicio»',fs5:'3. Abre el juego desde el nuevo icono',fs6:'toca para cerrar',
@@ -68,7 +68,7 @@ const STR={
   tapStart:'Toca la pantalla para empezar',spaceStart:'ESPACIO para empezar',fell:'HAS CAÍDO',points:'puntos',fromStart:'DESDE EL INICIO',firstLoc:'primera zona',again:'OTRA VEZ',
   spaceCont:'ESPACIO para repetir esta zona',rRestart:'R para empezar desde la primera zona',win:'¡VICTORIA!',winTxt:'El Demonio Oni ha caído. El castillo del shogun es libre.',
   scrollsN:'pergaminos',foesN:'enemigos',newBest:'¡Nuevo récord!',tapMenu:'Toca la pantalla para ir al menú',spaceMenu:'ESPACIO para ir al menú',
-  hitBy:' te ha golpeado',beaten:' ha caído!',moon:'La luna se tiñe de sangre…',wall:'Te chocaste con un muro',fall:'Te caíste',spike:'Pisaste unos pinchos',air:'Ataque desde el aire',archer:'Un arquero cerca',katana:'Golpe de katana',shot:'Te han dado'},
+  life:'¡+1 vida!',hitBy:' te ha golpeado',beaten:' ha caído!',moon:'La luna se tiñe de sangre…',wall:'Te chocaste con un muro',fall:'Te caíste',spike:'Pisaste unos pinchos',air:'Ataque desde el aire',archer:'Un arquero cerca',katana:'Golpe de katana',shot:'Te han dado'},
  en:{scrolls:'scrolls',foes:'foes',best:'best',loc:'LOCATION',clear:'LOCATION CLEARED',bonus:'life bonus +',next:'Next: ',last:'One last step…',
   resume:'RESUME',keyP:'key P',restart:'RESTART',locN:'Location ',toMenu:'MAIN MENU',saved:'progress saved',pause:'PAUSED',
   fsT:'FULL SCREEN ON IPHONE',fs1:'Safari does not let websites go full screen.',fs2:'Add the game to your Home Screen:',fs3:'1. Tap Share (the square with an arrow)',fs4:'2. Choose “Add to Home Screen”',fs5:'3. Launch the game from the new icon',fs6:'tap to close',
@@ -76,7 +76,7 @@ const STR={
   tapStart:'Tap the screen to start',spaceStart:'SPACE to start',fell:'YOU FELL',points:'score',fromStart:'START OVER',firstLoc:'first location',again:'TRY AGAIN',
   spaceCont:'SPACE to retry this location',rRestart:'R to start over from the first location',win:'VICTORY',winTxt:"The Oni Demon is defeated. The shogun's castle is free.",
   scrollsN:'scrolls',foesN:'foes',newBest:'New best!',tapMenu:'Tap the screen for the menu',spaceMenu:'SPACE for the menu',
-  hitBy:' hit you',beaten:' is defeated!',moon:'The moon turns blood red…',wall:'Hit a wall',fall:'Fell down',spike:'Stepped on spikes',air:'Attack from above',archer:'Archer close by',katana:'Katana strike',shot:'You were hit'}
+  life:'+1 life!',hitBy:' hit you',beaten:' is defeated!',moon:'The moon turns blood red…',wall:'Hit a wall',fall:'Fell down',spike:'Stepped on spikes',air:'Attack from above',archer:'Archer close by',katana:'Katana strike',shot:'You were hit'}
 };
 const T=k=>STR[lang||'ru'][k];
 const LN=l=>lang==='en'?l.en:lang==='es'?l.es:l.name, LS=l=>lang==='en'?l.enSub:lang==='es'?l.esSub:l.sub, BN=d=>lang==='en'?d.en:lang==='es'?d.es:d.name;
@@ -121,6 +121,7 @@ const SFX={
   tele:()=>tone(980,.2,'sine',.1,-420),
   thud:()=>{noise(.35,.3,180,'lowpass');tone(80,.35,'sine',.3,-40);},
   boom:()=>{noise(.6,.4,140,'lowpass');tone(70,.7,'sine',.35,-35);},
+  life:()=>[784,988,1319,1568].forEach((f,i)=>tone(f,.16,'square',.09,0,i*.07)),
   clear:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.16,0,i*.12)),
   win:()=>[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,.28,'triangle',.16,0,i*.15)),
   over:()=>[392,330,262,196].forEach((f,i)=>tone(f,.32,'triangle',.16,0,i*.2))
@@ -148,7 +149,8 @@ const P={x:180,y:0,vy:0,w:30,h:52,onGround:true,jumps:0,coyote:0,inv:0,throwT:0,
 let state=lang?'menu':'lang',paused=false,moonRed=1;
 let roofs=[],enemies=[],items=[],shots=[],parts=[],bullets=[],amb=[];
 let lvl=0,L=LEVELS[0],phase='run',levelDist=0,boss=null;
-let speed=340,dist=0,pts=0,levelStartPts=0,kills=0,scrollsN=0,lives=3;
+let speed=340,dist=0,pts=0,levelStartPts=0,kills=0,scrollsN=0,lives=5,nextLife=1000,lifePulse=0;
+const START_LIVES=5,MAX_LIVES=9,LIFE_EVERY=1000;
 let t=0,shake=0,flash=0,msg='',msgT=0,overT=0,cardT=0,clearT=0,clearBonus=0;
 let jumpQ=false,throwQ=false;
 
@@ -166,14 +168,14 @@ function newWorld(){
 function startLevel(i){
   moonRed=0;
   lvl=i;L=LEVELS[i];speed=L.speed;levelDist=0;phase='run';boss=null;bullets=[];shots=[];
-  lives=3;levelStartPts=pts;P.inv=0;initAmb();newWorld();cardT=2.8;msgT=0;step=0;
+  lives=Math.max(START_LIVES,lives);levelStartPts=pts;nextLife=(Math.floor(pts/LIFE_EVERY)+1)*LIFE_EVERY;P.inv=0;initAmb();newWorld();cardT=2.8;msgT=0;step=0;
   if(i>saved){saved=i;store('ninja-level',i);}
 }
 const inIntro=()=>state==='play'&&phase==='run'&&cardT>0&&levelDist<1;
 function skipIntro(){if(inIntro()&&cardT>.45){cardT=.45;return true;}return inIntro();}
-function newGame(){pts=0;kills=0;scrollsN=0;state='play';paused=false;startLevel(0);}
-function resumeSaved(){pts=0;kills=0;scrollsN=0;state='play';paused=false;startLevel(saved);}
-function continueGame(){pts=levelStartPts;state='play';paused=false;startLevel(lvl);}
+function newGame(){lives=START_LIVES;pts=0;kills=0;scrollsN=0;state='play';paused=false;startLevel(0);}
+function resumeSaved(){lives=START_LIVES;pts=0;kills=0;scrollsN=0;state='play';paused=false;startLevel(saved);}
+function continueGame(){lives=START_LIVES;pts=levelStartPts;state='play';paused=false;startLevel(lvl);}
 function say(s){msg=s;msgT=1.6;}
 
 function genRoofs(){
@@ -751,6 +753,15 @@ function drawBullet(b){
 }
 
 /* ---------- HUD ---------- */
+function checkLife(){
+  if(state!=='play')return;
+  while(pts>=nextLife){
+    nextLife+=LIFE_EVERY;
+    if(lives<MAX_LIVES){lives++;lifePulse=1;say(T('life'));SFX.life();buzz([30,40,30]);
+      burst(W-34-(lives-1)*28,32,'#ff4a52',18,220);}
+  }
+  lifePulse=Math.max(0,lifePulse-1/60*1.5);
+}
 function heart(x,y,full){
   ctx.fillStyle=full?C.blood:'rgba(255,255,255,.15)';
   ctx.beginPath();ctx.moveTo(x,y+5);ctx.bezierCurveTo(x,y,x-9,y,x-9,y+6);ctx.bezierCurveTo(x-9,y+11,x,y+15,x,y+18);
@@ -762,7 +773,11 @@ function band(y,h,a=.6){ctx.fillStyle=`rgba(5,4,12,${a})`;ctx.fillRect(0,y,W,h);
 function drawHUD(){
   text(String(Math.floor(pts)).padStart(5,'0'),24,44,30,C.paper);
   text(`${T('scrolls')} ${scrollsN}   ${T('foes')} ${kills}`,24,70,14,'#cfcae6');
-  for(let i=0;i<3;i++)heart(W-34-i*28,22,i<lives);
+  const nH=Math.max(START_LIVES,lives);
+  for(let i=0;i<nH;i++){
+    if(i===lives-1&&lifePulse>0){const k=1+.6*Math.sin(lifePulse*Math.PI);ctx.save();ctx.translate(W-34-i*28,31);ctx.scale(k,k);heart(0,-9,true);ctx.restore();}
+    else heart(W-34-i*28,22,i<lives);
+  }
   text(`${T('best')} ${best}`,W-24,66,14,'#cfcae6','right');
   const bx=W/2-150,by=30,bw=300;
   if(boss){
@@ -1028,6 +1043,7 @@ let last=performance.now();
 function loop(now){
   const dt=Math.min(.033,(now-last)/1000);last=now;
   if(!paused&&!fullHint)update(dt);
+  checkLife();
   music();
   draw();requestAnimationFrame(loop);
 }

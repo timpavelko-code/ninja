@@ -26,15 +26,15 @@ const LEVELS=[
   sky:['#070818','#1d1536','#46213d'],stars:true,moon:{x:760,y:115,r:54,c:'#f6ead2',glow:'255,230,200',craters:true},
   far:'#231a3c',farType:'hills',mid:'pagoda',midCol:'#160f29',fog:'70,33,61',roof:'tile',amb:'petal',flyer:'crow',
   sam:['#6e1d2a','#8a2635'],mix:{sam:.42,spike:.22,fly:.18,archer:0},boss:'shogun',accent:'#e0383f'},
- {name:'Бамбуковый лес',sub:'Мосты над туманом',en:"Bamboo Forest",enSub:'Bridges above the mist',es:"Bosque de bambú",esSub:'Puentes sobre la niebla',len:1600,speed:385,
+ {name:'Бамбуковый лес',sub:'Мосты над туманом',en:"Bamboo Forest",enSub:'Bridges above the mist',es:"Bosque de bambú",esSub:'Puentes sobre la niebla',len:1600,speed:355,
   sky:['#0b1f1c','#244a38','#b9a86a'],stars:false,moon:{x:700,y:160,r:72,c:'#f3e6b8',glow:'250,230,170'},
   far:'#1d3a30',farType:'hills',mid:'bamboo',midCol:'#123024',fog:'70,100,70',roof:'bridge',amb:'leaf',flyer:'bat',
   sam:['#2f5a3a','#3d7048'],mix:{sam:.32,spike:.25,fly:.25,archer:.3},boss:'tengu',accent:'#6fae6a'},
- {name:'Снежные горы',sub:'Перевал над облаками',en:"Snowy Mountains",enSub:'A pass above the clouds',es:"Montañas nevadas",esSub:'Un paso sobre las nubes',len:1800,speed:430,
+ {name:'Снежные горы',sub:'Перевал над облаками',en:"Snowy Mountains",enSub:'A pass above the clouds',es:"Montañas nevadas",esSub:'Un paso sobre las nubes',len:1800,speed:370,
   sky:['#0b1430','#33497e','#a9bce0'],stars:true,moon:{x:240,y:100,r:40,c:'#eef4ff',glow:'220,235,255',craters:true},
   far:'#2b3d6b',farType:'peaks',mid:'pines',midCol:'#18234a',fog:'190,205,235',roof:'ice',amb:'snow',flyer:'owl',
   sam:['#cfd6e6','#8fa2c4'],mix:{sam:.36,spike:.3,fly:.3,archer:.32},boss:'yuki',accent:'#9fc8ff'},
- {name:'Замок сёгуна',sub:'Последняя ночь',en:"Shogun's Castle",enSub:'The last night',es:"Castillo del shogun",esSub:'La última noche',len:2000,speed:475,
+ {name:'Замок сёгуна',sub:'Последняя ночь',en:"Shogun's Castle",enSub:'The last night',es:"Castillo del shogun",esSub:'La última noche',len:2000,speed:385,
   sky:['#12040a','#3d0b12','#8a2a14'],stars:true,moon:{x:720,y:130,r:84,c:'#e8693a',glow:'255,110,60'},
   far:'#2a0a12',farType:'hills',mid:'castle',midCol:'#1a060c',fog:'120,30,20',roof:'stone',amb:'ember',flyer:'wisp',
   sam:['#26262e','#44444f'],mix:{sam:.45,spike:.3,fly:.3,archer:.36},boss:'oni',accent:'#ff7a3a'}
@@ -315,7 +315,7 @@ function update(dt){
   if(inIntro()){jumpQ=throwQ=false;P.anim=0;return;}
 
   if(phase==='boss'||phase==='clear')speed+=(270-speed)*Math.min(1,dt*1.5);
-  else speed=Math.min(L.speed+90,speed+4*dt);
+  else speed=Math.min(L.speed*1.15,speed+4*dt);
   const dx=speed*dt;dist+=dx;pts+=dx/10;
   if(phase==='run'){levelDist+=dx;if(levelDist>=L.len*10){phase='toBoss';say(T('moon'));}}
   for(const r of roofs)r.x-=dx;
@@ -965,7 +965,8 @@ const fsTarget=()=>APP?document.documentElement:(cv.closest('.frame')||cv);
 const canFS=()=>{const d=fsTarget();return !!(d.requestFullscreen||d.webkitRequestFullscreen);};
 const isFull=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
 const standalone=()=>{try{return navigator.standalone===true||matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches;}catch(e){return false;}};
-function showFullBtn(){return isFull()||(!standalone()&&(canFS()||(IOS&&APP)));}
+const NATIVE=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+function showFullBtn(){if(NATIVE)return false;return isFull()||(!standalone()&&(canFS()||(IOS&&APP)));}
 function enterFull(){
   const d=fsTarget(),req=d.requestFullscreen||d.webkitRequestFullscreen;
   if(!req){if(IOS)fullHint=true;return;}
@@ -976,7 +977,7 @@ function toggleFull(){
   if(isFull()){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document)}catch(e){}}
   else enterFull();
 }
-function goFull(){if(APP&&TOUCH&&!IOS&&!isFull()&&canFS())enterFull();}
+function goFull(){if(APP&&TOUCH&&!IOS&&!NATIVE&&!isFull()&&canFS())enterFull();}
 function pauseOn(){if(state==='play'&&!paused){paused=true;}}
 function toMenu(){state='menu';paused=false;boss=null;bullets=[];lvl=0;L=LEVELS[0];initAmb();phase='run';newWorld();}
 addEventListener('keydown',e=>{
